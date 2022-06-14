@@ -311,3 +311,4 @@ if [  -d  /etc/arch-release ]; then
 
     yay --save --answerdiff None --answerclean None --removemake
     yay -Syu --noconfirm nvm code android-sdk android-sdk-platform-tools dart flutter gradle gradle-bash-completion ${package}
+fi
