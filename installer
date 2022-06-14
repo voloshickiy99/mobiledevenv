@@ -1,0 +1,313 @@
+#!/bin/bash
+
+nvm_pkgver="0.39.1"
+flutter_pkgver="3.0.2"
+androidstudio_pkgver="2021.2.1.15"
+gradle_pkgver="7.4.2"
+
+
+package="git make file wget curl tar zip unzip python3 g++-multilib clang cmake ninja-build pkg-config libgtk-3-dev xz-utils"
+
+
+#### Check profile
+    if [ ! -d ~/.profile  ]; then
+        mkdir ~/.profile
+    fi
+
+## install NVM
+install_nvm () {
+    
+    wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v${nvm_pkgver}/install.sh | bash
+}
+
+
+## install dart
+install_dart () {
+    if [ ! -d ~/.depot_tools ]; then
+        mkdir ~/.depot_tools
+    fi
+    cd ~/.depot_tools
+    git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+    echo -e "\n# Depot tools" >> ~/.profile
+    echo "[ -d `pwd`/depot_tools ] && PATH=\"`pwd`/depot_tools:\$PATH\"" >> ~/.profile
+    source ~/.profile
+    
+    if [ ! -d ~/.dart  ]; then
+        mkdir ~/.dart 
+    fi
+    
+    cd ~/.dart
+    
+    if [ ! -d ~/.dart/dart-sdk  ]; then
+        mkdir ~/.dart/dart-sdk 
+    fi
+    
+    cd dart-sdk
+    fetch dart
+    
+    cd sdk
+    ./tools/build.py --no-goma --mode release --arch x64 create_sdk
+    
+    if [ ! -d /usr/local/dart-out/  ]; then
+        mkdir -p /usr/local/dart-out/
+    fi
+    
+    ln -s -f /usr/local/dart-out/ out
+    echo -e "\n# Dart SDK" >> ~/.profile
+    echo "[ -d `pwd`/out/ReleaseX64/ ] && PATH=\"`pwd`/out/ReleaseX64/:\$PATH\"" >> ~/.profile
+    source ~/.profile
+}
+
+## install flutter
+install_flutter () {
+    if [ ! -d ~/.flutter  ]; then
+        mkdir ~/.flutter
+    fi
+    
+    cd ~/.flutter
+    wget https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${flutter_pkgver}-stable.tar.xz
+    tar -xvf flutter_linux_${flutter_pkgver}-stable.tar.xz
+    echo -e "\n# Flutter " >> ~/.profile
+    echo "[ -d `pwd`/flutter/bin" ] && PATH=\"`pwd`/flutter/bin":\$PATH\"" >> ~/.profile
+    source ~/.profile
+}
+
+## install android studio
+install_android_studio () {
+    if [ ! -d ~/.android  ]; then
+        mkdir ~/.android
+    fi
+    cd ~/.android
+    wget https://redirector.gvt1.com/edgedl/android/studio/ide-zips/${androidstudio_pkgver}/android-studio-${androidstudio_pkgver}-linux.tar.gz
+    tar xvf android-studio-${androidstudio_pkgver}-linux.tar.gz
+    ln -s ~/.android/android-studio/bin/./studio.sh ~/.android/android-studio/bin/AndroidSDK
+    echo -e "\n# Android studio" >> ~/.profile
+    echo "[ -d ~/.android/android-studio/bin/ ] && PATH=\"~/.android/android-studio/bin/:\$PATH\"" >> ~/.profile
+    echo "[ -d ~/.android/Sdk/cmdline-tools/latest/bin ] && PATH=\"~/.android/Sdk/cmdline-tools/latest/bin:\$PATH\"" >> ~/.profile
+    source ~/.profile
+    # Create Desctop entry
+    touch ~/.local/share/applications/androidstudio.desktop
+    echo -e "[Desktop Entry] \nVersion=1.0 \nType=Application \nName=Android Studio \nExec="/opt/android-studio/bin/studio.sh" %f \nIcon=/opt/android-studio/bin/studio.png \nCategories=Development;IDE; \nTerminal=false \nStartupNotify=true \nStartupWMClass=android-studio \n " > ~/.local/share/applications/androidstudio.desktop
+}
+
+## install sdk tools
+install_android_sdk_tools () {
+    if [ ! -d ~/.android  ]; then
+        mkdir ~/.android
+    fi
+    if [ ! -d ~/.android/commandlinetools  ]; then
+        mkdir ~/.android/commandlinetools
+    fi
+    cd ~/.android/commandlinetools
+    wget https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip
+    unzip commandlinetools-linux-8512546_latest.zip
+    tools/bin/sdkmanager --update
+    tools/bin/sdkmanager "platforms;android-25" "build-tools;25.0.2" "extras;google;m2repository" "extras;android;m2repository"
+    echo -e "\n# Android SDK tools" >> ~/.profile
+    echo "[ -d `pwd`/tools/bin/ ] && PATH=\"`pwd`/tools/bin/:\$PATH\"" >> ~/.profile
+    source ~/.profile
+}
+
+## install gradle 
+install_gradle () {
+    if [ ! -d ~/.gradle  ]; then
+        mkdir ~/.gradle
+    fi
+    
+    cd ~/.gradle
+    wget https://gradle.org/next-steps/?version=${gradle_pkgver}&format=bin
+    unzip -d /opt/gradle gradle-${gradle_pkgver}-bin.zip
+    echo -e "\n# Gradle " >> ~/.profile
+    echo "[ -d /opt/gradle/gradle-${gradle_pkgver}/bin ] && PATH=\"/opt/gradle/gradle-${gradle_pkgver}/bin:\$PATH\"" >> ~/.profile
+    source ~/.profile
+    sudo chmod +x /etc/profile.d/gradle.sh
+    source /etc/profile.d/gradle.sh
+}
+
+
+############################### If system is debian based #####################################################
+
+if [  -d /etc/debian_version ]; then
+
+    sudo apt-get update 
+    sudo apt-get install -y ${package}
+    sudo apt-get install -y libc6:i386 libncurses5:i386 libstdc++6:i386 lib32z1 libbz2-1.0:i386  libgtk-3-dev
+
+    ## VScode
+    wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
+    sudo install -o root -g root -m 644 packages.microsoft.gpg /etc/apt/trusted.gpg.d/
+    sudo sh -c 'echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/trusted.gpg.d/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" > /etc/apt/sources.list.d/vscode.list'
+    rm -f packages.microsoft.gpg
+    sudo apt-get install apt-transport-https
+    sudo apt-get update
+    sudo apt-get install code # or code-insiders
+
+    ## Dart
+    wget -qO- https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /usr/share/keyrings/dart.gpg
+    echo 'deb [signed-by=/usr/share/keyrings/dart.gpg arch=amd64] https://storage.googleapis.com/download.dartlang.org/linux/debian stable main' | sudo tee /etc/apt/sources.list.d/dart_stable.list
+    sudo apt-get update
+    sudo apt-get install dart
+    echo 'export PATH="$PATH:/usr/lib/dart/bin"' >> ~/.profile  
+
+    ## Android studio
+    sudo apt-get install openjdk-11-jdk
+    sudo add-apt-repository ppa:maarten-fonville/android-studio
+    sudo apt-get update
+    sudo apt-get install android-studio
+
+    install_nvm
+    install_gradle
+    install_android_sdk_tools
+
+
+
+fi
+
+
+##################################### Fedora ###################################################################
+
+if [  -d /etc/fedora-release ]; then
+
+    dnf check-update
+    sudo dnf install -y xz-utils zlib.i686 ncurses-libs.i686 bzip2-libs.i686 ${package}
+
+    ## VScode
+    sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
+    sudo sh -c 'echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" > /etc/yum.repos.d/vscode.repo'
+    dnf check-update
+    sudo dnf install code
+
+    install_nvm
+    install_dart
+    install_flutter
+    install_android_studio
+    install_android_sdk_tools
+    install_gradle
+
+
+
+
+
+fi
+
+##################################### RHEL ###################################################################
+
+if [  -d /etc/redhat-release ]; then
+
+    yum check-update
+    sudo yum install -y ${package} 
+
+    ## VScode
+    sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
+    sudo sh -c 'echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" > /etc/yum.repos.d/vscode.repo'
+    yum check-update
+    sudo yum install code
+
+    install_nvm
+    install_dart
+    install_flutter
+    install_android_studio
+    install_android_sdk_tools
+    install_gradle
+
+
+
+fi
+##################################### CentOS ###################################################################
+
+if [  -d /etc/centos-release ]; then
+
+    yum check-update
+    sudo yum install -y ${package} 
+
+    ## VScode
+    sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
+    sudo sh -c 'echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" > /etc/yum.repos.d/vscode.repo'
+    yum check-update
+    sudo yum install code
+
+    install_nvm
+    install_dart
+    install_flutter
+    install_android_studio
+    install_android_sdk_tools
+    install_gradle
+
+
+
+fi
+
+
+
+#################################### SUSE ##################################################################
+
+if [  -d /etc/SuSE-release ]; then
+
+    sudo zypper install ${package}
+
+    ## VScode
+    sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
+    sudo sh -c 'echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ntype=rpm-md\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" > /etc/zypp/repos.d/vscode.repo'
+    sudo zypper refresh
+    sudo zypper install code
+
+    install_nvm
+    install_dart
+    install_flutter
+    install_android_studio
+    install_android_sdk_tools
+    install_gradle
+
+
+
+
+fi
+
+
+
+#################################### Alpine ##########################################################
+if [  -d /etc/alpine-release ]; then
+    sudo apk -update add ${package}
+
+    install_nvm
+    install_dart
+    install_flutter
+    install_android_studio
+    install_android_sdk_tools
+    install_gradle
+
+
+
+fi
+
+
+#################################### Gentoo based #####################################################
+
+if [  -d  /etc/gentoo-release ]; then
+    sudo emerge --ask ${package}
+
+    install_nvm
+    install_dart
+    install_flutter
+    install_android_studio
+    install_android_sdk_tools
+    install_gradle
+
+fi
+
+#################################### Arch based #######################################################
+
+if [  -d  /etc/arch-release ]; then
+
+    sudo pacman -Syyu
+    sudo pacman -S  --needed base-devel git
+
+    if [ ! -d  /bin/yay ]; then
+        git clone https://aur.archlinux.org/yay.git
+        sudo chown -R $USER:$USER ./yay
+        cd yay
+        makepkg -si
+    fi
+
+    yay --save --answerdiff None --answerclean None --removemake
+    yay -Syu --noconfirm nvm code android-sdk android-sdk-platform-tools dart flutter gradle gradle-bash-completion ${package}
