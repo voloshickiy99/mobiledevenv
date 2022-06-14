@@ -11,7 +11,7 @@ package="git make file wget curl tar zip unzip python3 g++-multilib clang cmake 
 
 #### Check profile
     if [ ! -d ~/.profile  ]; then
-        mkdir ~/.profile
+        touch ~/.profile
     fi
 
 ## install NVM
