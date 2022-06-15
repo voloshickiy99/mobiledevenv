@@ -126,8 +126,6 @@ install_gradle () {
     echo -e "\n# Gradle " >> ~/.profile
     echo "[ -d /opt/gradle/gradle-${gradle_pkgver}/bin ] && PATH=\"/opt/gradle/gradle-${gradle_pkgver}/bin:\$PATH\"" >> ~/.profile
     source ~/.profile
-    sudo chmod +x /etc/profile.d/gradle.sh
-    source /etc/profile.d/gradle.sh
 }
 
 
