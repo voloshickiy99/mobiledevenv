@@ -10,7 +10,7 @@ package="git make file wget curl tar zip unzip python3 g++-multilib clang cmake 
 
 
 #### Check profile
-    if [ ! -d ~/.profile  ]; then
+    if [ ! -f ~/.profile  ]; then
         touch ~/.profile
     fi
 
@@ -127,7 +127,7 @@ install_gradle () {
 
 ############################### If system is debian based #####################################################
 
-if [  -d /etc/debian_version ]; then
+if [  -f /etc/debian_version ]; then
 
     sudo apt-get update 
     sudo apt-get install -y ${package}
@@ -166,7 +166,7 @@ fi
 
 ##################################### Fedora ###################################################################
 
-if [  -d /etc/fedora-release ]; then
+if [  -f /etc/fedora-release ]; then
 
     dnf check-update
     sudo dnf install -y xz-utils zlib.i686 ncurses-libs.i686 bzip2-libs.i686 ${package}
@@ -192,7 +192,7 @@ fi
 
 ##################################### RHEL ###################################################################
 
-if [  -d /etc/redhat-release ]; then
+if [  -f /etc/redhat-release ]; then
 
     yum check-update
     sudo yum install -y ${package} 
@@ -215,7 +215,7 @@ if [  -d /etc/redhat-release ]; then
 fi
 ##################################### CentOS ###################################################################
 
-if [  -d /etc/centos-release ]; then
+if [  -f /etc/centos-release ]; then
 
     yum check-update
     sudo yum install -y ${package} 
@@ -241,7 +241,7 @@ fi
 
 #################################### SUSE ##################################################################
 
-if [  -d /etc/SuSE-release ]; then
+if [  -f /etc/SuSE-release ]; then
 
     sudo zypper install ${package}
 
@@ -266,7 +266,7 @@ fi
 
 
 #################################### Alpine ##########################################################
-if [  -d /etc/alpine-release ]; then
+if [  -f /etc/alpine-release ]; then
     sudo apk -update add ${package}
 
     install_nvm
@@ -283,7 +283,7 @@ fi
 
 #################################### Gentoo based #####################################################
 
-if [  -d  /etc/gentoo-release ]; then
+if [  -f  /etc/gentoo-release ]; then
     sudo emerge --ask ${package}
 
     install_nvm
@@ -297,12 +297,12 @@ fi
 
 #################################### Arch based #######################################################
 
-if [  -d  /etc/arch-release ]; then
+if [  -f  /etc/arch-release ]; then
 
     sudo pacman -Syyu
     sudo pacman -S  --needed base-devel git
 
-    if [ ! -d  /bin/yay ]; then
+    if [ ! -f  /bin/yay ]; then
         git clone https://aur.archlinux.org/yay.git
         sudo chown -R $USER:$USER ./yay
         cd yay
