@@ -6,7 +6,7 @@ androidstudio_pkgver="2021.2.1.15"
 gradle_pkgver="7.4.2"
 
 
-package="git make file wget curl tar zip unzip python3 g++-multilib clang cmake ninja-build pkg-config libgtk-3-dev xz-utils"
+package="git make file wget curl tar zip unzip python3 g++-multilib clang cmake ninja-build pkg-config libgtk-3-dev xz-utils gpg"
 
 
 #### Check profile
@@ -98,13 +98,17 @@ install_android_sdk_tools () {
     if [ ! -d ~/.android/commandlinetools  ]; then
         mkdir ~/.android/commandlinetools
     fi
-    cd ~/.android/commandlinetools
+    if [ ! -d ~/.android/commandlinetools/cmdline-tools/ ]; then
+        mkdir ~/.android/commandlinetools/cmdline-tools/
+    fi
+    cd ~/.android/commandlinetools/cmdline-tools/
     wget https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip
     unzip commandlinetools-linux-8512546_latest.zip
-    tools/bin/sdkmanager --update
-    tools/bin/sdkmanager "platforms;android-25" "build-tools;25.0.2" "extras;google;m2repository" "extras;android;m2repository"
+    mv cmdline-tools/ latest/
+    ./latest/bin/sdkmanager --update
+    ./latest/bin/sdkmanager "platforms;android-25" "build-tools;25.0.2" "extras;google;m2repository" "extras;android;m2repository"
     echo -e "\n# Android SDK tools" >> ~/.profile
-    echo "[ -d `pwd`/tools/bin/ ] && PATH=\"`pwd`/tools/bin/:\$PATH\"" >> ~/.profile
+    echo "[ -d `pwd`/latest/bin/ ] && PATH=\"`pwd`/latest/bin/:\$PATH\"" >> ~/.profile
     source ~/.profile
 }
 
@@ -138,22 +142,22 @@ if [  -f /etc/debian_version ]; then
     sudo install -o root -g root -m 644 packages.microsoft.gpg /etc/apt/trusted.gpg.d/
     sudo sh -c 'echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/trusted.gpg.d/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" > /etc/apt/sources.list.d/vscode.list'
     rm -f packages.microsoft.gpg
-    sudo apt-get install apt-transport-https
+    sudo apt-get install -y apt-transport-https
     sudo apt-get update
-    sudo apt-get install code # or code-insiders
+    sudo apt-get install -y code # or code-insiders
 
     ## Dart
     wget -qO- https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /usr/share/keyrings/dart.gpg
     echo 'deb [signed-by=/usr/share/keyrings/dart.gpg arch=amd64] https://storage.googleapis.com/download.dartlang.org/linux/debian stable main' | sudo tee /etc/apt/sources.list.d/dart_stable.list
     sudo apt-get update
-    sudo apt-get install dart
+    sudo apt-get install -y dart
     echo 'export PATH="$PATH:/usr/lib/dart/bin"' >> ~/.profile  
 
     ## Android studio
-    sudo apt-get install openjdk-11-jdk
+    sudo apt-get install -y openjdk-11-jdk
     sudo add-apt-repository ppa:maarten-fonville/android-studio
     sudo apt-get update
-    sudo apt-get install android-studio
+    sudo apt-get install -y android-studio
 
     install_nvm
     install_gradle
