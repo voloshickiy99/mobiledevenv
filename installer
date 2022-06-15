@@ -119,7 +119,9 @@ install_gradle () {
     fi
     
     cd ~/.gradle
-    wget https://gradle.org/next-steps/?version=${gradle_pkgver}&format=bin
+    wget https://services.gradle.org/distributions/gradle-${gradle_pkgver}-bin.zip
+    sudo mkdir /opt/gradle
+    sudo chown $USER:$USER /opt/gradle/
     unzip -d /opt/gradle gradle-${gradle_pkgver}-bin.zip
     echo -e "\n# Gradle " >> ~/.profile
     echo "[ -d /opt/gradle/gradle-${gradle_pkgver}/bin ] && PATH=\"/opt/gradle/gradle-${gradle_pkgver}/bin:\$PATH\"" >> ~/.profile
