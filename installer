@@ -47,14 +47,9 @@ install_dart () {
     
     cd sdk
     ./tools/build.py --no-goma --mode release --arch x64 create_sdk
-    
-    if [ ! -d /usr/local/dart-out/  ]; then
-        mkdir -p /usr/local/dart-out/
-    fi
-    
-    ln -s -f /usr/local/dart-out/ out
     echo -e "\n# Dart SDK" >> ~/.profile
-    echo "[ -d `pwd`/out/ReleaseX64/ ] && PATH=\"`pwd`/out/ReleaseX64/:\$PATH\"" >> ~/.profile
+    echo "[ -d `pwd`/out/ReleaseX64/bin ] && PATH=\"`pwd`/out/ReleaseX64/bin:\$PATH\"" >> ~/.profile
+    echo "[ -d ~/.dart/dart-sdk/sdk/sdk/bin/ ] && PATH=\"~/.dart/dart-sdk/sdk/sdk/bin/:\$PATH\"" >> ~/.profile
     source ~/.profile
 }
 
@@ -68,7 +63,7 @@ install_flutter () {
     wget https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${flutter_pkgver}-stable.tar.xz
     tar -xvf flutter_linux_${flutter_pkgver}-stable.tar.xz
     echo -e "\n# Flutter " >> ~/.profile
-    echo "[ -d `pwd`/flutter/bin" ] && PATH=\"`pwd`/flutter/bin":\$PATH\"" >> ~/.profile
+    echo "[ -d `pwd`/flutter/bin ] && PATH=\"`pwd`/flutter/bin:\$PATH\"" >> ~/.profile
     source ~/.profile
 }
 
@@ -80,14 +75,14 @@ install_android_studio () {
     cd ~/.android
     wget https://redirector.gvt1.com/edgedl/android/studio/ide-zips/${androidstudio_pkgver}/android-studio-${androidstudio_pkgver}-linux.tar.gz
     tar xvf android-studio-${androidstudio_pkgver}-linux.tar.gz
-    ln -s ~/.android/android-studio/bin/./studio.sh ~/.android/android-studio/bin/AndroidSDK
+    sudo ln -s ~/.android/android-studio/bin/./studio.sh /usr/local/bin/android-studio
     echo -e "\n# Android studio" >> ~/.profile
     echo "[ -d ~/.android/android-studio/bin/ ] && PATH=\"~/.android/android-studio/bin/:\$PATH\"" >> ~/.profile
     echo "[ -d ~/.android/Sdk/cmdline-tools/latest/bin ] && PATH=\"~/.android/Sdk/cmdline-tools/latest/bin:\$PATH\"" >> ~/.profile
     source ~/.profile
     # Create Desctop entry
     touch ~/.local/share/applications/androidstudio.desktop
-    echo -e "[Desktop Entry] \nVersion=1.0 \nType=Application \nName=Android Studio \nExec="/opt/android-studio/bin/studio.sh" %f \nIcon=/opt/android-studio/bin/studio.png \nCategories=Development;IDE; \nTerminal=false \nStartupNotify=true \nStartupWMClass=android-studio \n " > ~/.local/share/applications/androidstudio.desktop
+    echo -e "[Desktop Entry] \nVersion=1.0 \nType=Application \nName=Android Studio \nExec="/usr/local/bin/android-studio" %f \nIcon=/opt/android-studio/bin/studio.png \nCategories=Development;IDE; \nTerminal=false \nStartupNotify=true \nStartupWMClass=android-studio \n " > ~/.local/share/applications/androidstudio.desktop
 }
 
 ## install sdk tools
@@ -179,7 +174,7 @@ if [  -f /etc/fedora-release ]; then
     sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
     sudo sh -c 'echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" > /etc/yum.repos.d/vscode.repo'
     dnf check-update
-    sudo dnf install code
+    sudo dnf install -y code
 
     install_nvm
     install_dart
@@ -190,9 +185,11 @@ if [  -f /etc/fedora-release ]; then
 
 
 
-
+exit
 
 fi
+
+
 
 ##################################### RHEL ###################################################################
 
@@ -214,7 +211,7 @@ if [  -f /etc/redhat-release ]; then
     install_android_sdk_tools
     install_gradle
 
-
+exit
 
 fi
 ##################################### CentOS ###################################################################
